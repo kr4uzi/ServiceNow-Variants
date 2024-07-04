@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>x_424426_invar.InvariantUtil</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <name>InvariantUtil</name>
+        <script><![CDATA[/* global gs, sn_scoped_cache */
+/* global Class, GlideScriptedExtensionPoint, GlideRecord, GlideTableHierarchy */
+/* eslint no-undef: "error" */
+var InvariantUtil = Class.create();
+InvariantUtil.prototype = {
+	CONSTANTS: {
+		CACHE_KEY: 'invariants_script_columns',
+		COMMENT_REGEX: /\/\/\s*\[(?:INV|INVARIANT)(?:=(.+?))?\]\[(\w+)\((.*)\)\]/g
+	},
+
+	initialize: function() {
+		const gsep = new GlideScriptedExtensionPoint();
+		const eps = gsep.getExtensions('InvariantExtension');
+		this.eps = [];
+		for (let i = 0; i < eps.length; i++) {
+			try {
+				eps[i].initialize();
+				this.eps.push(eps[i]);
+			} catch (e) {
+				gs.error('Invariants: Failed to initialize Extension Point');
+			}
+		}
+
+		this.helpers = [];
+		const helpers = gsep.getExtensions('InvariantHelper');
+		for (let i = 0; i < helpers.length; i++) {
+			helpers[i].initialize();
+			this.helpers.push(helpers[i]);
+		}
+
+		if (!this.helpers.length) {
+			throw new Error('Invariants: At least one helper is required!');
+		}
+	},
+
+	getScriptFields: function (tableName) {
+		const cachedFields = sn_scoped_cache.ScopedCacheManager.get(this.CONSTANTS.CACHE_KEY, tableName);
+		if (cachedFields) {
+			return JSON.parse(cachedFields);
+		}
+
+		const dictGr = new GlideRecord('sys_dictionary');
+		dictGr.addQuery('name', 'IN', new GlideTableHierarchy(tableName).getTables());
+		dictGr.addQuery('internal_type', 'CONTAINS', 'script');
+		dictGr.query();
+
+		const scriptFields = [];
+		while (dictGr.next()) {
+			scriptFields.push({
+				name: dictGr.getValue('element'),
+				type: dictGr.getValue('internal_type')
+			});
+		}
+
+		sn_scoped_cache.ScopedCacheManager.put(this.CONSTANTS.CACHE_KEY, tableName, JSON.stringify(scriptFields));
+		return scriptFields;
+	},
+
+	getScriptFieldValues: function (metadataGr) {
+		const klass = metadataGr.getRecordClassName();
+		const tableGr = new GlideRecord('sys_db_object');
+		tableGr.addQuery('name', klass);
+		tableGr.setLimit(1);
+		tableGr.query();
+		if (tableGr.next()) {
+			const scope = tableGr.sys_scope.toString();
+			for (let i = 0; i < this.helpers.length; i++) {
+				const helper = this.helpers[i];
+				if (helper.handlesScope(scope) && helper.handlesTable(klass)) {
+					const fields = this.getScriptFields(klass);
+					return helper.getFieldValues(metadataGr, fields.map(f => f.name));
+				}
+			}
+		}
+
+		return {};
+	},
+
+	showCheckInvariantsUIAction: function (metadataGr) {
+		if (!metadataGr.canRead()) {
+			return false;
+		}
+
+		const values = this.getScriptFieldValues(metadataGr);
+		for (let column in values) {
+			if (values[column].match(this.CONSTANTS.COMMENT_REGEX)) {
+				return true;
+			}
+		}
+		
+		return false;
+	},
+
+	checkInvariants: function (metadataGr) {
+		const scriptValues = this.getScriptFieldValues(metadataGr);
+		const successMessages = [];
+		const errorMessages = [];
+
+		for (const column in scriptValues) {
+			const result = this.checkScriptComments(scriptValues[column]);
+			result.invariants.forEach(inv => {
+				if (inv.result?.status == 'success') {
+					if (inv.result?.message) {
+						successMessages.push(`Invariant ${inv.name}: fulfilled - ${inv.result.message}`);
+					} else {
+						successMessages.push(`Invariant ${inv.name}: fulfilled`);
+					}
+				} else {
+					if (inv.result?.message) {
+						errorMessages.push(`Invariant ${inv.name}: violated - ${inv.result.message}`);
+					} else {
+						errorMessages.push(`Invariant ${inv.name}: violated`);
+					}
+				}
+			});
+		}
+
+		if (errorMessages.length) {
+			gs.addErrorMessage('Violated invariants:<br />' + errorMessages.join('<br />'));
+		}
+
+		if (successMessages.length) {
+			gs.addInfoMessage('Fulfilled invariants:<br />' + successMessages.join('<br />'));
+		}
+	},
+
+	checkScriptComments: function (scriptValue, callback) {
+		const result = {
+			status: 'success',
+			message: '',
+			invariants: []
+		};
+
+		const matches = scriptValue.matchAll(this.CONSTANTS.COMMENT_REGEX);
+		for (const [undefined, invName, funcName, argsList] of matches) {
+			const invariantName = invName || `${funcName}(${argsList})`;
+
+			let args = [];
+			try {
+				args = JSON.parse('[' + argsList + ']');
+			} catch (e) {
+				result.status = 'error';
+				result.invariants.push({
+					name: invariantName,
+					result: {
+						status: 'error',
+						message: `Invalid arguments supplied for '${invariantName}'`
+					}
+				});
+				continue;
+			}
+
+			const invariantResult = this.execInvariant(invariantName, funcName, args);
+			result.invariants.push({
+				name: invariantName,
+				result: invariantResult
+			});
+
+			if (callback) {
+				if (callback(invariantResult)) {
+					result.status = 'aborted';
+					return result;
+				}
+			}
+		}
+
+		return result;
+	},
+
+	execInvariant: function (invName, funcName, args) {
+		invName = invName || '(unnamed)';
+
+		const result = {
+			status: '',
+			message: ''
+		};
+
+		for (let i = 0; i < this.eps.length; i++) {
+			const ext = this.eps[i];
+			const func = ext[funcName];
+			if (func) {
+				try {
+					const extRes = func.apply(ext, args);
+					if (extRes.status) {
+						result.status = extRes.status;
+						result.message = extRes.message;
+					} else {
+						result.status = 'error';
+						result.message = `Invalid return type when handling invariant's (${invName}) function: ${funcName}`;
+					}
+				} catch (e) {
+					result.status = 'error';
+					result.message = `Error when handling invariant's (${invName}) function: ${funcName}:\n${e}`;
+				}
+			}
+
+			if (result.status) {
+				return result;
+			}
+		}
+
+		result.status = 'error';
+		result.message = `No Extension Point handled invariant's (${invName}) function: ${funcName}`;
+		return result;
+	},
+
+	type: 'InvariantUtil'
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>markus.kraus</sys_created_by>
+        <sys_created_on>2024-07-04 10:39:58</sys_created_on>
+        <sys_id>7bbc16bf930302101f07f5f08bba10aa</sys_id>
+        <sys_mod_count>26</sys_mod_count>
+        <sys_name>InvariantUtil</sys_name>
+        <sys_package display_value="Invariants" source="x_424426_invar">c8bc9afb930302101f07f5f08bba107b</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_scope display_value="Invariants">c8bc9afb930302101f07f5f08bba107b</sys_scope>
+        <sys_update_name>sys_script_include_7bbc16bf930302101f07f5f08bba10aa</sys_update_name>
+        <sys_updated_by>markus.kraus</sys_updated_by>
+        <sys_updated_on>2024-07-04 20:21:56</sys_updated_on>
+    </sys_script_include>
+</record_update>

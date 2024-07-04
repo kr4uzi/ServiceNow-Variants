@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_package_dependency_m2m">
+    <sys_package_dependency_m2m action="INSERT_OR_UPDATE">
+        <dependency display_value="Tables and Columns" source="com.glide.tables_and_columns">e29bcc28d9313110cedf7dffddb48f43</dependency>
+        <min_version>1.0.0</min_version>
+        <sys_created_by>markus.kraus</sys_created_by>
+        <sys_created_on>2024-07-04 19:23:42</sys_created_on>
+        <sys_id>4f055c04935b02101f07f5f08bba105d</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_package display_value="Invariants" source="x_424426_invar">c8bc9afb930302101f07f5f08bba107b</sys_package>
+        <sys_updated_by>markus.kraus</sys_updated_by>
+        <sys_updated_on>2024-07-04 19:23:42</sys_updated_on>
+    </sys_package_dependency_m2m>
+</record_update>

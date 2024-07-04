@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_extension_point">
+    <sys_extension_point action="INSERT_OR_UPDATE">
+        <api_name>x_424426_invar.InvariantExtension</api_name>
+        <description/>
+        <example><![CDATA[/* global Class, GlideRecord */
+/* eslint no-undef: "error" */
+var InvariantExtension = Class.create();
+InvariantExtension.prototype = {
+	initialize: function() {
+
+	},
+
+	example_groupExists: function (groupName) {
+		var groupGr = new GlideRecord('sys_user_group');
+		groupGr.addQuery('name', groupName);
+		groupGr.setLimit(1);
+		groupGr.query();
+
+		var result = {
+			status: 'error',
+			message: ''
+		};
+
+		if (groupGr.hasNext()) {
+			result.status = 'success';
+		} else {
+			result.message = 'Group [' + groupName + '] does not exist!';
+		}
+
+		return result;
+	},
+
+    type: 'InvariantExtension'
+};]]></example>
+        <name>InvariantExtension</name>
+        <restrict_scope>false</restrict_scope>
+        <sys_class_name>sys_extension_point</sys_class_name>
+        <sys_created_by>markus.kraus</sys_created_by>
+        <sys_created_on>2024-07-04 10:47:11</sys_created_on>
+        <sys_id>2fad56ff930302101f07f5f08bba10d3</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>InvariantExtension</sys_name>
+        <sys_package display_value="Invariants" source="x_424426_invar">c8bc9afb930302101f07f5f08bba107b</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Invariants">c8bc9afb930302101f07f5f08bba107b</sys_scope>
+        <sys_update_name>sys_extension_point_2fad56ff930302101f07f5f08bba10d3</sys_update_name>
+        <sys_updated_by>markus.kraus</sys_updated_by>
+        <sys_updated_on>2024-07-04 10:47:11</sys_updated_on>
+    </sys_extension_point>
+</record_update>

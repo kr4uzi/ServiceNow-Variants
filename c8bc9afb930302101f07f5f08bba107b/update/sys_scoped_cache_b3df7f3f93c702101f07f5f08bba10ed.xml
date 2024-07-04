@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_scoped_cache">
+    <sys_scoped_cache action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <always_compress>false</always_compress>
+        <cache_name>invariants_script_columns</cache_name>
+        <cache_name_with_scope>invariants_script_columns.x_424426_invar</cache_name_with_scope>
+        <max_entries>100</max_entries>
+        <sys_class_name>sys_scoped_cache</sys_class_name>
+        <sys_created_by>markus.kraus</sys_created_by>
+        <sys_created_on>2024-07-04 17:51:22</sys_created_on>
+        <sys_id>b3df7f3f93c702101f07f5f08bba10ed</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>invariants_script_columns</sys_name>
+        <sys_package display_value="Invariants" source="x_424426_invar">c8bc9afb930302101f07f5f08bba107b</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Invariants">c8bc9afb930302101f07f5f08bba107b</sys_scope>
+        <sys_update_name>sys_scoped_cache_b3df7f3f93c702101f07f5f08bba10ed</sys_update_name>
+        <sys_updated_by>markus.kraus</sys_updated_by>
+        <sys_updated_on>2024-07-04 17:51:22</sys_updated_on>
+    </sys_scoped_cache>
+</record_update>

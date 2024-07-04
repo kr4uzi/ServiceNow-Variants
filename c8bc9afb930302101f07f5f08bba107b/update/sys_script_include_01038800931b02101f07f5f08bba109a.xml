@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>x_424426_invar.InvariantHelper</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description>Implements extension point x_424426_invar.InvariantHelper</description>
+        <name>InvariantHelper</name>
+        <script><![CDATA[var InvariantHelper = Class.create();
+InvariantHelper.prototype = {
+	initialize: function() {
+		const scriptGr = new GlideRecord('sys_rte_eb_script_operation');
+		scriptGr.addQuery('sys_id', 'ae0fde33934302101f07f5f08bba10a1');
+		scriptGr.setLimit(1);
+		scriptGr.query();
+		if (scriptGr.next()) {
+			this.scriptGr = scriptGr;
+		} else {
+			throw new Error('Failed to initialize InvariantExtension');
+		}
+	},
+
+	handlesScope: function (scopeName) {
+		return true;
+	},
+
+	handlesTable: function (tableName) {
+		return true;
+	},
+
+	getFieldValues: function (metadataGr, fields) {
+		const dbObjectGr = new GlideRecord('sys_db_object');
+		dbObjectGr.addQuery('name', metadataGr.getRecordClassName());
+		dbObjectGr.setLimit(1);
+		dbObjectGr.query();
+		if (dbObjectGr.next()) {
+			this.scriptGr.sys_scope = dbObjectGr.sys_scope.toString();
+			this.scriptGr.script = `
+				(function (table, fields) {
+					var anyGr = new GlideRecordSecure(table);
+					anyGr.addQuery('sys_id', sysId);
+					anyGr.setLimit(1);
+					anyGr.query();
+					
+					var values = {};
+					if (anyGr.next()) {
+						fields.forEach(function (field) {
+							values[field] = anyGr.getValue(field);
+						});
+					}
+
+					return JSON.stringify(values);
+				})(table, JSON.parse(fields));`;
+
+			const json = new GlideScopedEvaluator().evaluateScript(this.scriptGr, 'script', {
+				table: dbObjectGr.getValue('name'),
+				sysId: metadataGr.getUniqueValue(),
+				fields: JSON.stringify(fields)
+			});
+
+			if (json) {
+				// the returned object is a global scope object, but we want a scoped one
+				return JSON.parse(json);
+			}
+		}
+
+		return {};
+	},
+
+	type: 'InvariantHelper'
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>markus.kraus</sys_created_by>
+        <sys_created_on>2024-07-04 18:04:55</sys_created_on>
+        <sys_id>01038800931b02101f07f5f08bba109a</sys_id>
+        <sys_mod_count>14</sys_mod_count>
+        <sys_name>InvariantHelper</sys_name>
+        <sys_package display_value="Invariants" source="x_424426_invar">c8bc9afb930302101f07f5f08bba107b</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Invariants">c8bc9afb930302101f07f5f08bba107b</sys_scope>
+        <sys_update_name>sys_script_include_01038800931b02101f07f5f08bba109a</sys_update_name>
+        <sys_updated_by>markus.kraus</sys_updated_by>
+        <sys_updated_on>2024-07-04 19:36:42</sys_updated_on>
+    </sys_script_include>
+</record_update>
