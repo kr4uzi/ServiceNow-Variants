@@ -92,7 +92,7 @@ InvariantUtil.prototype = {
 
 		const values = this.getScriptFieldValues(metadataGr);
 		for (let column in values) {
-			if (values[column].match(this.CONSTANTS.COMMENT_REGEX)) {
+			if (values[column]?.match(this.CONSTANTS.COMMENT_REGEX)) {
 				return true;
 			}
 		}
@@ -219,13 +219,13 @@ InvariantUtil.prototype = {
         <sys_created_by>markus.kraus</sys_created_by>
         <sys_created_on>2024-07-04 10:39:58</sys_created_on>
         <sys_id>7bbc16bf930302101f07f5f08bba10aa</sys_id>
-        <sys_mod_count>26</sys_mod_count>
+        <sys_mod_count>27</sys_mod_count>
         <sys_name>InvariantUtil</sys_name>
         <sys_package display_value="Invariants" source="x_424426_invar">c8bc9afb930302101f07f5f08bba107b</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Invariants">c8bc9afb930302101f07f5f08bba107b</sys_scope>
         <sys_update_name>sys_script_include_7bbc16bf930302101f07f5f08bba10aa</sys_update_name>
         <sys_updated_by>markus.kraus</sys_updated_by>
-        <sys_updated_on>2024-07-04 20:21:56</sys_updated_on>
+        <sys_updated_on>2024-07-05 16:17:08</sys_updated_on>
     </sys_script_include>
 </record_update>
