@@ -23,6 +23,11 @@ InvariantExtension.prototype = {
 		}
 	},
 
+	/**
+	 * @param {string} tableName
+	 * @param {string} encodedQuery
+	 * @return {boolean}
+	 */
 	recordExists: function (tableName, encodedQuery) {
 		if (!gs.tableExists(tableName)) {
 			return {
@@ -65,13 +70,13 @@ InvariantExtension.prototype = {
         <sys_created_by>markus.kraus</sys_created_by>
         <sys_created_on>2024-07-04 10:47:15</sys_created_on>
         <sys_id>7dde563f930302101f07f5f08bba1088</sys_id>
-        <sys_mod_count>2</sys_mod_count>
+        <sys_mod_count>3</sys_mod_count>
         <sys_name>InvariantExtension</sys_name>
         <sys_package display_value="Invariants" source="x_424426_invar">c8bc9afb930302101f07f5f08bba107b</sys_package>
         <sys_policy/>
         <sys_scope display_value="Invariants">c8bc9afb930302101f07f5f08bba107b</sys_scope>
         <sys_update_name>sys_script_include_7dde563f930302101f07f5f08bba1088</sys_update_name>
         <sys_updated_by>markus.kraus</sys_updated_by>
-        <sys_updated_on>2024-07-04 19:13:59</sys_updated_on>
+        <sys_updated_on>2024-07-06 21:36:15</sys_updated_on>
     </sys_script_include>
 </record_update>
