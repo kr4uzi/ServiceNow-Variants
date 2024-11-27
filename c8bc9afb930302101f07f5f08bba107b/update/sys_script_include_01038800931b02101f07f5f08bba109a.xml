@@ -6,12 +6,14 @@
         <caller_access/>
         <client_callable>false</client_callable>
         <description>Implements extension point x_424426_invar.InvariantHelper</description>
+        <mobile_callable>false</mobile_callable>
         <name>InvariantHelper</name>
+        <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[var InvariantHelper = Class.create();
 InvariantHelper.prototype = {
 	initialize: function() {
-		const scriptGr = new GlideRecord('sys_rte_eb_script_operation');
-		scriptGr.addQuery('sys_id', 'ae0fde33934302101f07f5f08bba10a1');
+		const scriptGr = new GlideRecord('clone_cleanup_script');
+		scriptGr.addQuery('sys_scope', 'global');
 		scriptGr.setLimit(1);
 		scriptGr.query();
 		if (scriptGr.next()) {
@@ -36,7 +38,15 @@ InvariantHelper.prototype = {
 	 * @return {boolean}
 	 */
 	handlesTable: function (tableName) {
-		return true;
+		const dbObjectGr = new GlideRecord('sys_db_object');
+		dbObjectGr.addQuery('sys_scope.scope', 'global');
+		dbObjectGr.addQuery('name', tableName);
+		dbObjectGr.addEncodedQuery('^NQaccess=^ORaccess=public');
+		dbObjectGr.addQuery('read_access', true);
+		dbObjectGr.addQuery('name', tableName);
+		dbObjectGr.setLimit(1);
+		dbObjectGr.query();
+		return dbObjectGr.hasNext();
 	},
 
 	/**
@@ -51,7 +61,6 @@ InvariantHelper.prototype = {
 		dbObjectGr.setLimit(1);
 		dbObjectGr.query();
 		if (dbObjectGr.next()) {
-			this.scriptGr.sys_scope = dbObjectGr.sys_scope.toString();
 			this.scriptGr.script = `
 				(function (table, fields) {
 					var anyGr = new GlideRecordSecure(table);
@@ -90,13 +99,24 @@ InvariantHelper.prototype = {
         <sys_created_by>markus.kraus</sys_created_by>
         <sys_created_on>2024-07-04 18:04:55</sys_created_on>
         <sys_id>01038800931b02101f07f5f08bba109a</sys_id>
-        <sys_mod_count>15</sys_mod_count>
+        <sys_mod_count>16</sys_mod_count>
         <sys_name>InvariantHelper</sys_name>
         <sys_package display_value="Invariants" source="x_424426_invar">c8bc9afb930302101f07f5f08bba107b</sys_package>
         <sys_policy/>
         <sys_scope display_value="Invariants">c8bc9afb930302101f07f5f08bba107b</sys_scope>
         <sys_update_name>sys_script_include_01038800931b02101f07f5f08bba109a</sys_update_name>
         <sys_updated_by>markus.kraus</sys_updated_by>
-        <sys_updated_on>2024-07-06 21:26:43</sys_updated_on>
+        <sys_updated_on>2024-11-27 21:01:43</sys_updated_on>
     </sys_script_include>
+    <sys_es_latest_script action="INSERT_OR_UPDATE">
+        <id>01038800931b02101f07f5f08bba109a</id>
+        <sys_created_by>markus.kraus</sys_created_by>
+        <sys_created_on>2024-11-27 21:01:43</sys_created_on>
+        <sys_id>d293684b834e52100971c810feaad3b4</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_updated_by>markus.kraus</sys_updated_by>
+        <sys_updated_on>2024-11-27 21:01:43</sys_updated_on>
+        <table>sys_script_include</table>
+        <use_es_latest>true</use_es_latest>
+    </sys_es_latest_script>
 </record_update>
